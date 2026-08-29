@@ -29,7 +29,8 @@ class Letter(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    source_text = Column(Text, nullable=False)
+    source_text = Column(Text, nullable=True)
+    image_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates= "letters")
