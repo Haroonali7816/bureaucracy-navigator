@@ -1,0 +1,208 @@
+[
+  {
+    "id": "A1",
+    "filename": "A1_auslanderbehoerde_appointment.txt",
+    "authority": "Ausländerbehörde",
+    "letter_type": "appointment_notice",
+    "true_deadlines": [
+      {"date": "2026-09-15", "description": "In-person appointment for residence permit renewal"}
+    ],
+    "true_required_actions": [
+      "Attend the appointment in person",
+      "Bring passport, biometric photo, proof of health insurance, proof of enrollment"
+    ],
+    "true_urgency": "high",
+    "notes": "Missing the appointment without rescheduling before the current permit expires ends lawful residence."
+  },
+  {
+    "id": "A2",
+    "filename": "A2_auslanderbehoerde_reminder.txt",
+    "authority": "Ausländerbehörde",
+    "letter_type": "appointment_notice",
+    "true_deadlines": [
+      {"date": "2026-09-15", "description": "Same appointment as A1 — final reminder"}
+    ],
+    "true_required_actions": [
+      "Attend the appointment in person",
+      "Bring the documents listed in the original letter (A1)"
+    ],
+    "true_urgency": "high",
+    "notes": "Same underlying deadline as A1, sent as a follow-up. Tests whether extraction correctly ties this back to one case rather than treating it as a new, separate deadline."
+  },
+  {
+    "id": "A3",
+    "filename": "A3_auslanderbehoerde_info_processing.txt",
+    "authority": "Ausländerbehörde",
+    "letter_type": "informational",
+    "true_deadlines": [],
+    "true_required_actions": [],
+    "true_urgency": "low",
+    "notes": "Purely informational form letter about general processing delays. No deadline and no action despite official/urgent-sounding letterhead — tests false-positive risk (model inventing an action where none exists)."
+  },
+  {
+    "id": "A4",
+    "filename": "A4_auslanderbehoerde_document_request.txt",
+    "authority": "Ausländerbehörde",
+    "letter_type": "document_request",
+    "true_deadlines": [
+      {"date": "2026-09-10", "description": "Submit proof of health insurance for the current semester"}
+    ],
+    "true_required_actions": [
+      "Mail or hand-deliver current health insurance proof to the Ausländerbehörde service office"
+    ],
+    "true_urgency": "medium",
+    "notes": "Clusters with C2 and D4 (same underlying document, three different authorities, similar week) — intentional for Day 5 conflict/priority testing."
+  },
+  {
+    "id": "B1",
+    "filename": "B1_finanzamt_assessment_payment.txt",
+    "authority": "Finanzamt",
+    "letter_type": "fee_tax_notice",
+    "true_deadlines": [
+      {"date": "2026-10-01", "description": "Pay income tax balance due (412.00 EUR) for tax year 2025"}
+    ],
+    "true_required_actions": [
+      "Transfer 412.00 EUR to the account named in the assessment"
+    ],
+    "true_urgency": "medium",
+    "notes": "Late payment triggers statutory surcharges (§240 AO) but does not itself risk any status (visa, enrollment, insurance)."
+  },
+  {
+    "id": "B2",
+    "filename": "B2_finanzamt_refund.txt",
+    "authority": "Finanzamt",
+    "letter_type": "informational",
+    "true_deadlines": [],
+    "true_required_actions": [],
+    "true_urgency": "low",
+    "notes": "Refund notice for a prior tax year (2024) — no deadline, no action. Deliberately similar surface language to B1 to test the model doesn't confuse a refund with a payment demand."
+  },
+  {
+    "id": "B3",
+    "filename": "B3_finanzamt_appeal_deadline.txt",
+    "authority": "Finanzamt",
+    "letter_type": "fee_tax_notice",
+    "true_deadlines": [
+      {"date": "2026-09-25", "description": "Deadline to file a formal appeal (Einspruch) if disputing the assessment"}
+    ],
+    "true_required_actions": [
+      "File a written appeal only if the recipient disagrees with the assessment"
+    ],
+    "true_urgency": "medium",
+    "notes": "Conditional action — the deadline is real, but the action only applies if the recipient disagrees. Good test case for self-check nuance versus a flat 'must act' deadline."
+  },
+  {
+    "id": "B4",
+    "filename": "B4_finanzamt_missing_documents.txt",
+    "authority": "Finanzamt",
+    "letter_type": "document_request",
+    "true_deadlines": [
+      {"date": "2026-09-20", "description": "Submit bank interest statement and proof of tuition payments"}
+    ],
+    "true_required_actions": [
+      "Provide bank interest certificate and tuition payment proof"
+    ],
+    "true_urgency": "medium",
+    "notes": "Missing this deadline leads to an estimated assessment (§162 AO), which can be financially worse than the real figures — real but not existential stakes."
+  },
+  {
+    "id": "C1",
+    "filename": "C1_krankenkasse_rate_change.txt",
+    "authority": "Krankenkasse",
+    "letter_type": "informational",
+    "true_deadlines": [],
+    "true_required_actions": [],
+    "true_urgency": "low",
+    "notes": "Routine contribution-rate change notice. No deadline, no action."
+  },
+  {
+    "id": "C2",
+    "filename": "C2_krankenkasse_enrollment_proof.txt",
+    "authority": "Krankenkasse",
+    "letter_type": "document_request",
+    "true_deadlines": [
+      {"date": "2026-09-10", "description": "Submit proof of enrollment for the 2026/2027 winter semester"}
+    ],
+    "true_required_actions": [
+      "Submit current enrollment certificate to the health insurer"
+    ],
+    "true_urgency": "high",
+    "notes": "Missing this deadline ends student-rate coverage and triggers reclassification into a standard (much more expensive) tariff — real coverage risk."
+  },
+  {
+    "id": "C3",
+    "filename": "C3_krankenkasse_family_insurance_approved.txt",
+    "authority": "Krankenkasse",
+    "letter_type": "informational",
+    "true_deadlines": [],
+    "true_required_actions": [],
+    "true_urgency": "low",
+    "notes": "Approval confirmation. No deadline, no action."
+  },
+  {
+    "id": "C4",
+    "filename": "C4_krankenkasse_payment_overdue.txt",
+    "authority": "Krankenkasse",
+    "letter_type": "deadline_warning",
+    "true_deadlines": [
+      {"date": "2026-09-05", "description": "Pay overdue contribution (58.30 EUR) before it is referred to collections"}
+    ],
+    "true_required_actions": [
+      "Pay the outstanding 58.30 EUR contribution"
+    ],
+    "true_urgency": "high",
+    "notes": "Earliest deadline in the dataset. Small amount but real consequence (collections referral, added costs)."
+  },
+  {
+    "id": "D1",
+    "filename": "D1_university_reenrollment.txt",
+    "authority": "University",
+    "letter_type": "deadline_warning",
+    "true_deadlines": [
+      {"date": "2026-09-30", "description": "Pay semester fee (315.64 EUR) to re-enroll for winter semester 2026/2027"}
+    ],
+    "true_required_actions": [
+      "Transfer the semester fee with the student ID number referenced"
+    ],
+    "true_urgency": "high",
+    "notes": "Missing this deadline results in de-registration (Exmatrikulation) — one of the highest-consequence letters in the set."
+  },
+  {
+    "id": "D2",
+    "filename": "D2_university_thesis_registration.txt",
+    "authority": "University",
+    "letter_type": "deadline_warning",
+    "true_deadlines": [
+      {"date": "2026-10-15", "description": "Register thesis with the examination office"}
+    ],
+    "true_required_actions": [
+      "Submit completed registration form with first supervisor's written approval"
+    ],
+    "true_urgency": "medium",
+    "notes": "Missing it delays graduation timeline rather than ending enrollment outright."
+  },
+  {
+    "id": "D3",
+    "filename": "D3_university_office_hours.txt",
+    "authority": "University",
+    "letter_type": "informational",
+    "true_deadlines": [],
+    "true_required_actions": [],
+    "true_urgency": "low",
+    "notes": "Administrative notice about office hours. No deadline, no action."
+  },
+  {
+    "id": "D4",
+    "filename": "D4_university_missing_insurance_proof.txt",
+    "authority": "University",
+    "letter_type": "document_request",
+    "true_deadlines": [
+      {"date": "2026-09-12", "description": "Submit statutory health insurance proof to complete enrollment"}
+    ],
+    "true_required_actions": [
+      "Submit health insurance proof to the student registrar"
+    ],
+    "true_urgency": "high",
+    "notes": "Clusters with A4 and C2 — same underlying document (health insurance proof) required by three different authorities within roughly the same week. Deliberately built this way to give Day 5's conflict engine a real 'same document, multiple deadlines' case to detect."
+  }
+]
