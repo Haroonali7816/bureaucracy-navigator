@@ -1,0 +1,280 @@
+{
+  "summary": {
+    "total_letters": 16,
+    "extraction_failures": 3,
+    "letter_type_accuracy": 0.6875,
+    "deadline_dates_accuracy": 0.8125
+  },
+  "results": [
+    {
+      "id": "A1",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "appointment_notice",
+      "true_letter_type": "appointment_notice",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-15"
+      ],
+      "true_deadline_dates": [
+        "2026-09-15"
+      ],
+      "predicted_required_actions": [
+        "Zum persönlichen Termin am 15.09.2026 um 10:30 Uhr erscheinen oder bei Verhinderung rechtzeitig unter Angabe des Aktenzeichens absagen",
+        "Geforderte Unterlagen im Original zum Termin mitbringen"
+      ],
+      "true_required_actions": [
+        "Attend the appointment in person",
+        "Bring passport, biometric photo, proof of health insurance, proof of enrollment"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "A2",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "appointment_notice",
+      "true_letter_type": "appointment_notice",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-15"
+      ],
+      "true_deadline_dates": [
+        "2026-09-15"
+      ],
+      "predicted_required_actions": [
+        "Termin am 15.09.2026 um 10:30 Uhr in Raum 214 wahrnehmen",
+        "Im Schreiben vom 20.08.2026 genannte Unterlagen vollständig mitbringen"
+      ],
+      "true_required_actions": [
+        "Attend the appointment in person",
+        "Bring the documents listed in the original letter (A1)"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "A3",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "informational",
+      "true_letter_type": "informational",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [],
+      "true_deadline_dates": [],
+      "predicted_required_actions": [],
+      "true_required_actions": [],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "A4",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "document_request",
+      "true_letter_type": "document_request",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-10"
+      ],
+      "true_deadline_dates": [
+        "2026-09-10"
+      ],
+      "predicted_required_actions": [
+        "Aktuellen Nachweis der Krankenversicherung für das laufende Semester per Post oder persönlich im Servicebüro einreichen"
+      ],
+      "true_required_actions": [
+        "Mail or hand-deliver current health insurance proof to the Ausländerbehörde service office"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "B1",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "fee_tax_notice",
+      "true_letter_type": "fee_tax_notice",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-10-01"
+      ],
+      "true_deadline_dates": [
+        "2026-10-01"
+      ],
+      "predicted_required_actions": [
+        "Nachzahlung in Höhe von 412,00 EUR bis zum 01.10.2026 überweisen"
+      ],
+      "true_required_actions": [
+        "Transfer 412.00 EUR to the account named in the assessment"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "B2",
+      "extraction_failed": false,
+      "letter_type_correct": false,
+      "predicted_letter_type": "fee_tax_notice",
+      "true_letter_type": "informational",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [],
+      "true_deadline_dates": [],
+      "predicted_required_actions": [],
+      "true_required_actions": [],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "B3",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "fee_tax_notice",
+      "true_letter_type": "fee_tax_notice",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-25"
+      ],
+      "true_deadline_dates": [
+        "2026-09-25"
+      ],
+      "predicted_required_actions": [
+        "Schriftlich Einspruch einlegen (falls nicht einverstanden)"
+      ],
+      "true_required_actions": [
+        "File a written appeal only if the recipient disagrees with the assessment"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "B4",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "document_request",
+      "true_letter_type": "document_request",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-20"
+      ],
+      "true_deadline_dates": [
+        "2026-09-20"
+      ],
+      "predicted_required_actions": [
+        "Fehlende Unterlagen nachreichen"
+      ],
+      "true_required_actions": [
+        "Provide bank interest certificate and tuition payment proof"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "C1",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "informational",
+      "true_letter_type": "informational",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [],
+      "true_deadline_dates": [],
+      "predicted_required_actions": [],
+      "true_required_actions": [],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "C2",
+      "extraction_failed": true,
+      "error": "ServerError(\"503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}\")",
+      "letter_type_correct": false,
+      "deadline_dates_correct": false,
+      "true_letter_type": "document_request",
+      "true_deadline_dates": [
+        "2026-09-10"
+      ]
+    },
+    {
+      "id": "C3",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "informational",
+      "true_letter_type": "informational",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [],
+      "true_deadline_dates": [],
+      "predicted_required_actions": [],
+      "true_required_actions": [],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "C4",
+      "extraction_failed": false,
+      "letter_type_correct": false,
+      "predicted_letter_type": "fee_tax_notice",
+      "true_letter_type": "deadline_warning",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-05"
+      ],
+      "true_deadline_dates": [
+        "2026-09-05"
+      ],
+      "predicted_required_actions": [
+        "Offenen Betrag von 58,30 EUR bis spätestens 05.09.2026 bezahlen"
+      ],
+      "true_required_actions": [
+        "Pay the outstanding 58.30 EUR contribution"
+      ],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "D1",
+      "extraction_failed": true,
+      "error": "ServerError(\"503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}\")",
+      "letter_type_correct": false,
+      "deadline_dates_correct": false,
+      "true_letter_type": "deadline_warning",
+      "true_deadline_dates": [
+        "2026-09-30"
+      ]
+    },
+    {
+      "id": "D2",
+      "extraction_failed": true,
+      "error": "ServerError(\"503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}\")",
+      "letter_type_correct": false,
+      "deadline_dates_correct": false,
+      "true_letter_type": "deadline_warning",
+      "true_deadline_dates": [
+        "2026-10-15"
+      ]
+    },
+    {
+      "id": "D3",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "informational",
+      "true_letter_type": "informational",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [],
+      "true_deadline_dates": [],
+      "predicted_required_actions": [],
+      "true_required_actions": [],
+      "predicted_confidence_flags": []
+    },
+    {
+      "id": "D4",
+      "extraction_failed": false,
+      "letter_type_correct": true,
+      "predicted_letter_type": "document_request",
+      "true_letter_type": "document_request",
+      "deadline_dates_correct": true,
+      "predicted_deadline_dates": [
+        "2026-09-12"
+      ],
+      "true_deadline_dates": [
+        "2026-09-12"
+      ],
+      "predicted_required_actions": [
+        "Nachweis der gesetzlichen Krankenversicherung bis spätestens 12.09.2026 im Studierendensekretariat einreichen."
+      ],
+      "true_required_actions": [
+        "Submit health insurance proof to the student registrar"
+      ],
+      "predicted_confidence_flags": []
+    }
+  ]
+}

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from app.schemas import ExtractionResult
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.6-flash"
 
 _client: genai.Client | None = None
 
