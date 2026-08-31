@@ -32,3 +32,19 @@ class ExtractionResult(BaseModel):
     consequences: Optional[str] = None
     contact_info: Optional[str] = None
     confidence_flags: list[str] = Field(default_factory=list)
+
+class ConfidenceLevel(str,Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+class SelfCheckResult(BaseModel):
+    authority_confidence: ConfidenceLevel
+    letter_type_confidence: ConfidenceLevel
+    deadline_confidence: ConfidenceLevel
+    required_actions_confidence: ConfidenceLevel
+    required_documents_confidence: ConfidenceLevel
+    consequences_confidence: ConfidenceLevel
+    contact_info_confidence: ConfidenceLevel
+    needs_human_review: bool
+    reasoning: list[str] = Field(default_factory=list)
