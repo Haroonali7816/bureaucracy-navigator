@@ -6,7 +6,7 @@ python-dotenv==1.0.1
 sqlalchemy==2.0.35
 psycopg2-binary==2.9.9
 
-google-genai==0.3.0
+google-genai==2.21.0
 
 redis==5.0.8
 rq==1.16.2

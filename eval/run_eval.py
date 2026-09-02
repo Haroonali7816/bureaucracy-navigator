@@ -9,10 +9,11 @@ sys.path.insert(0,str(REPO_ROOT / "backend"))
 load_dotenv(REPO_ROOT / ".env")
 
 from app.pipeline.classify_extract import classify_and_extract
+from app.pipeline.self_check import self_check
 
 LABELS_PATH = REPO_ROOT / "data" / "labels.json"
 IMAGES_DIR = REPO_ROOT / "data" / "sample_letters_images"
-RESULTS_PATH = REPO_ROOT / "eval" / "results_day2.json"
+RESULTS_PATH = REPO_ROOT / "eval" / "results_day3.json"
 
 def image_path_for(label:dict) -> Path:
     stem = Path(label["filename"]).stem
@@ -34,10 +35,11 @@ def score_letter(label:dict) -> dict:
             "deadline_dates_correct": False,
             "true_letter_type": label["letter_type"],
             "true_deadline_dates": true_dates,
+            "self_check_failed": True,
         }
     pred_dates = sorted(d.date.isoformat() for d in extraction.deadlines)
 
-    return{
+    result = {
         "id": label["id"],
         "extraction_failed": False,
         "letter_type_correct": extraction.letter_type.value == label["letter_type"],
@@ -50,6 +52,41 @@ def score_letter(label:dict) -> dict:
         "true_required_actions": label["true_required_actions"],
         "predicted_confidence_flags": extraction.confidence_flags,
     }
+
+    try:
+        check = self_check(str(image_path), extraction)
+    except Exception as exc:
+        result["self_check_failed"] = True
+        result["self_check_error"] = repr(exc)
+        return result 
+    result["self_check_failed"] = False
+    result["needs_human_review"] = check.needs_human_review
+    result["reasoning"] = check.reasoning
+    result["letter_type_confidence"] = check.letter_type_confidence.value
+    result["deadline_confidence"] = check.deadline_confidence.value
+    result["authority_confidence"] = check.authority_confidence.value
+    result["required_actions_confidence"] = check.required_actions_confidence.value
+    result["required_documents_confidence"] = check.required_documents_confidence.value
+    result["consequences_confidence"] = check.consequences_confidence.value
+    result["contact_info_confidence"] = check.contact_info_confidence.value
+
+    return result 
+
+def compute_false_confidence_rate(results:list[dict]) -> float | None:
+
+    high_confidence_calls = []
+    for r in results:
+        if r["extraction_failed"] or r.get("self_check_failed"):
+            continue
+        if r["letter_type_confidence"] == "high":
+            high_confidence_calls.append(r["letter_type_correct"])
+        if r["deadline_confidence"] == "high":
+            high_confidence_calls.append(r["deadline_dates_correct"])
+
+    if not high_confidence_calls:
+        return None
+    n_wrong = sum(not was_correct for was_correct in high_confidence_calls)
+    return n_wrong / len(high_confidence_calls)
 
 def main()-> None:
     labels = json.loads(LABELS_PATH.read_text(encoding="utf-8"))
@@ -66,12 +103,17 @@ def main()-> None:
             print(f"[{label['id']}] {status}")
     n_total = len(results)
     n_failed = sum(r["extraction_failed"] for r in results)
+    n_self_check_failed = sum(r["self_check_failed"] for r in results if not r["extraction_failed"])
+    n_flagged = sum(r.get("needs_human_review", False) for r in results)
 
     summary = {
         "total_letters": n_total,
         "extraction_failures": n_failed,
+        "self_check_failures": n_self_check_failed,
         "letter_type_accuracy": sum(r["letter_type_correct"] for r in results) / n_total,
         "deadline_dates_accuracy": sum(r["deadline_dates_correct"] for r in results)/ n_total,
+        "needs_human_review" : n_flagged,
+        "false_confidence_rate": compute_false_confidence_rate(results),
 
     }
     output = {"summary": summary, "results": results}

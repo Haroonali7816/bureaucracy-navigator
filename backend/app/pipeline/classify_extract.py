@@ -62,6 +62,7 @@ def classify_and_extract(image_path: str) -> ExtractionResult:
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=ExtractionResult,
+            http_options=types.HttpOptions(timeout=60000),
         ),
     )
 
@@ -79,6 +80,7 @@ def classify_and_extract(image_path: str) -> ExtractionResult:
            config=types.GenerateContentConfig(
                response_mime_type="application/json",
                response_schema=ExtractionResult,
+                http_options=types.HttpOptions(timeout=60000),
            ),
         )
 

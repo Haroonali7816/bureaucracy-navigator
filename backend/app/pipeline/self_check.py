@@ -73,6 +73,7 @@ def self_check(image_path:str, extraction: ExtractionResult)-> SelfCheckResult:
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=SelfCheckResult,
+            http_options=types.HttpOptions(timeout=60000),
         )
     )
 
@@ -91,6 +92,7 @@ def self_check(image_path:str, extraction: ExtractionResult)-> SelfCheckResult:
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=SelfCheckResult,
+                http_options=types.HttpOptions(timeout=60000),
             ),
         )
         return SelfCheckResult.model_validate_json(retry_response.text)
