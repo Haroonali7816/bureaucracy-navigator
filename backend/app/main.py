@@ -2,10 +2,15 @@
 import os
 import tempfile
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 from pydantic import ValidationError
 
 from app.db import init_db
+from app.db import get_db
+from app.models import User
+from app.auth import SignupRequest, Token, create_access_token, hash_password, verify_password
 from app.pipeline.classify_extract import classify_and_extract
 
 @asynccontextmanager
@@ -54,6 +59,28 @@ async def upload_letter(file:UploadFile = File(...)):
         os.remove(tmp_path)
 
     return extraction.model_dump(mode="json")
-# TODO GET /jobs{id}, POST /auth/signup, POST /auth/login
+
+@app.post("/auth/signup" , response_model = Token)
+def signup(payload: SignupRequest, db : Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email ==payload.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="email already registered")
+
+    user = User(email=payload.email, hashed_password=hash_password(payload.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return Token(access_token=create_access_token(user.id))
+
+@app.post("/auth/login", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db:Session=Depends(get_db)):
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if user is None or not verify_password(form_data.password,user.hashed_password):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return Token(access_token=create_access_token(user.id))
 # TODO GET /priorities
 # TODO POST /letters/{id}/approve
