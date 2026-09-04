@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -88,11 +89,56 @@ def compute_false_confidence_rate(results:list[dict]) -> float | None:
     n_wrong = sum(not was_correct for was_correct in high_confidence_calls)
     return n_wrong / len(high_confidence_calls)
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--only",
+        type=str,
+        default=None,
+        help=(
+            "Comma-separated letter ids to actually re-run against Gemini (e.g. "
+            "B1,B2,B3,B4,C1,C2). Every other letter is pulled from the existing "
+            "results_day3.json instead of burning API quota re-running it."
+        ),
+    )
+    return parser.parse_args()
+
+
 def main()-> None:
+    args = parse_args()
+    only_ids = set(i.strip() for i in args.only.split(",")) if args.only else None
+
     labels = json.loads(LABELS_PATH.read_text(encoding="utf-8"))
+
+    existing_by_id = {}
+    if only_ids is not None and RESULTS_PATH.exists():
+        prior = json.loads(RESULTS_PATH.read_text(encoding="utf-8"))
+        existing_by_id = {r["id"]: r for r in prior["results"]}
+        missing = only_ids - existing_by_id.keys()
+        if missing:
+            print(
+                f"WARNING: --only requested ids with no prior result to fall back on: "
+                f"{sorted(missing)}"
+            )
+
+    if only_ids is not None:
+        n_calls = 2 * len(only_ids)
+        print(
+            f"--only {sorted(only_ids)}: about to make up to {n_calls} Gemini calls "
+            f"(classify_and_extract + self_check per letter, more if a validation retry "
+            f"fires). Ctrl+C now if quota isn't actually fresh."
+        )
+        input("Press Enter to continue...")
 
     results = []
     for label in labels:
+        if only_ids is not None and label["id"] not in only_ids:
+            if label["id"] in existing_by_id:
+                results.append(existing_by_id[label["id"]])
+                print(f"[{label['id']}] reused prior result (not in --only set)")
+            else:
+                print(f"[{label['id']}] SKIPPED: not in --only set and no prior result exists")
+            continue
         print(f"[{label['id']}] extracting {image_path_for(label).name}...")
         result = score_letter(label)
         results.append(result)

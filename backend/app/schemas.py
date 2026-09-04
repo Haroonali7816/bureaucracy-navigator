@@ -4,6 +4,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+
 class Authority(str, Enum):
     AUSLANDERBEHORDE = "Ausländerbehörde"
     FINANZAMT = "Finanzamt"
@@ -12,6 +13,7 @@ class Authority(str, Enum):
     BURGERAMT = "Bürgeramt"
     OTHER = "Other"
 
+
 class LetterType(str, Enum):
     APPOINTMENT_NOTICE = "appointment_notice"
     FEE_TAX_NOTICE = "fee_tax_notice"
@@ -19,9 +21,11 @@ class LetterType(str, Enum):
     DEADLINE_WARNING = "deadline_warning"
     INFORMATIONAL = "informational"
 
+
 class Deadline(BaseModel):
     date: date
     description: str
+
 
 class ExtractionResult(BaseModel):
     authority: Authority
@@ -33,10 +37,12 @@ class ExtractionResult(BaseModel):
     contact_info: Optional[str] = None
     confidence_flags: list[str] = Field(default_factory=list)
 
-class ConfidenceLevel(str,Enum):
+
+class ConfidenceLevel(str, Enum):
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
+
 
 class SelfCheckResult(BaseModel):
     authority_confidence: ConfidenceLevel
@@ -48,3 +54,18 @@ class SelfCheckResult(BaseModel):
     contact_info_confidence: ConfidenceLevel
     needs_human_review: bool
     reasoning: list[str] = Field(default_factory=list)
+
+
+class JobOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    id: int
+    letter_id: int
+    status: str
+    error_message: Optional[str] = None
+
+
+class UploadResponse(BaseModel):
+    letter_id: int
+    job_id: int
+    status: str
