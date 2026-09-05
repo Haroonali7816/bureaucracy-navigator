@@ -39,6 +39,25 @@ SEVERE_KEYWORDS = [
     "legal action",
     "lawsuit",
     "criminal",
+    # German
+    "abschieben",
+    "abschiebung",
+    "widerruf",
+    "widerrufen",
+    "kündigung",
+    "kündigen",
+    "beendigung",
+    "aussetzung",
+    "erlischt",
+    "erlöschen",
+    "erloschen",
+    "bußgeld",
+    "geldstrafe",
+    "strafe",
+    "inkasso",
+    "rechtliche schritte",
+    "klage",
+    "strafrechtlich",
 ]
 
 
