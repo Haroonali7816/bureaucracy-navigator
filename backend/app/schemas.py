@@ -69,3 +69,30 @@ class UploadResponse(BaseModel):
     letter_id: int
     job_id: int
     status: str
+
+class LetterPriorityOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    letter_id: int
+    authority: str
+    letter_type: LetterType
+    deadline_date: date
+    deadline_description: str
+    days_left: int
+    severity: int
+    urgency: int
+    score: int
+    required_documents: list[str]
+    required_actions: list[str]
+
+class ConflictOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    letter_id_a: int
+    letter_id_b: int
+    reason: str
+    detail: str
+
+class PrioritiesResponse(BaseModel):
+    queue: list[LetterPriorityOut]
+    conflicts: list[ConflictOut]

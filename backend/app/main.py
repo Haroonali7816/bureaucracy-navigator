@@ -2,6 +2,7 @@
 import uuid
 import os
 import tempfile
+from datetime import date
 from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
@@ -11,7 +12,7 @@ from pydantic import ValidationError
 
 from app.db import init_db
 from app.db import get_db
-from app.models import User, Letter, Job
+from app.models import User, Letter, Job, Extraction
 from app.auth import (
     SignupRequest,
     Token,
@@ -24,6 +25,9 @@ from app.pipeline.classify_extract import classify_and_extract
 from app.queue import letter_queue
 from app.schemas import JobOut, UploadResponse
 from app.worker import process_letter_job
+
+from app.priority import build_letter_priority, detect_conflicts
+from app.schemas import PrioritiesResponse, LetterPriorityOut, ConflictOut
 
 UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
@@ -124,5 +128,32 @@ def login(
     return Token(access_token=create_access_token(user.id))
 
 
-# TODO GET /priorities
+@app.get("/priorities", response_model=PrioritiesResponse)
+def get_priorities(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    extractions = (
+        db.query(Extraction)
+        .join(Letter, Extraction.letter_id == Letter.id)
+        .filter(Letter.user_id == current_user.id)
+        .filter(Extraction.approved == False)
+        .all()
+    )
+    today = date.today()
+    priorities = [
+        p
+        for p in (build_letter_priority(e, today) for e in extractions)
+        if p is not None
+    ]
+    priorities.sort(key=lambda p: p.score, reverse=True)
+
+    conflicts = detect_conflicts(priorities)
+
+    return PrioritiesResponse(
+        queue=[LetterPriorityOut.model_validate(p) for p in priorities],
+        conflicts=[ConflictOut.model_validate(c) for c in conflicts],
+    )
+
+
 # TODO POST /letters/{id}/approve
