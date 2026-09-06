@@ -2,10 +2,11 @@
 import uuid
 import os
 import tempfile
+from ics import Calendar, Event
 from datetime import date
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
@@ -23,7 +24,7 @@ from app.auth import (
 )
 from app.pipeline.classify_extract import classify_and_extract
 from app.queue import letter_queue
-from app.schemas import JobOut, UploadResponse
+from app.schemas import JobOut, UploadResponse, ApproveResponse
 from app.worker import process_letter_job
 
 from app.priority import build_letter_priority, detect_conflicts
@@ -156,4 +157,64 @@ def get_priorities(
     )
 
 
-# TODO POST /letters/{id}/approve
+@app.post("/letters/{letter_id}/approve", response_model=ApproveResponse)
+def approve_letter(
+    letter_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    letter = db.get(Letter, letter_id)
+    if letter is None or letter.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="letter not found")
+
+    extraction = letter.extraction
+    if extraction is None:
+        raise HTTPException(status_code=409, detail="letter has not been extracted yet")
+
+    if not extraction.approved:
+        extraction.approved = True
+        db.commit()
+
+    return ApproveResponse(letter_id=letter.id, approved=True)
+
+
+@app.get("letters/{letter_id}/ics")
+def get_letter_ics(
+    letter_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    letter = db.get(Letter, letter_id)
+    if letter is None or letter.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="letter not found")
+
+    extraction = letter.extraction
+    if extraction is None:
+        raise HTTPException(status_code=409, detail="letter has not been extracted yet")
+
+    if not extraction.approved:
+        raise HTTPException(status_code=409, detail="letter has not been approved yet")
+
+    if not extraction.deadlines:
+        raise HTTPException(
+            status_code=404, detail="this letter has no deadlines to export"
+        )
+
+    calendar = Calendar()
+    for i, entry in enumerate(extraction.deadlines):
+        event = Event(
+            name=f"{extraction.authority}: {entry['description']}",
+            begin=entry["date"],
+            uid=f"letter-{letter_id}-deadline-{i}@bureaucracy-navigator",
+            description=extraction.consequences,
+        )
+        event.make_all_day()
+        calendar.events.add(event)
+
+    return Response(
+        content=calendar.serialize(),
+        media_type="text/calendar",
+        headers={
+            "Content-Disposition": f'attachment; filename="letter_{letter_id}.ics"'
+        },
+    )

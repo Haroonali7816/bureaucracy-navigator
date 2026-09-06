@@ -96,3 +96,7 @@ class ConflictOut(BaseModel):
 class PrioritiesResponse(BaseModel):
     queue: list[LetterPriorityOut]
     conflicts: list[ConflictOut]
+
+class ApproveResponse(BaseModel):
+    letter_id: int
+    approved: bool
