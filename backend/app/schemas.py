@@ -100,3 +100,14 @@ class PrioritiesResponse(BaseModel):
 class ApproveResponse(BaseModel):
     letter_id: int
     approved: bool
+
+class DraftReply(BaseModel):
+    subject: str = Field(..., description="Short subject line, in German")
+    body_de: str = Field(..., description="Full reply text, formal German (Sie-form), ready to send")
+    summary_en: str = Field(..., description="2-3 plain English sentences explaining what body_de says")
+
+class DraftReplyOut(BaseModel):
+    letter_id: int
+    subject: str
+    body_de: str
+    summary_en: str

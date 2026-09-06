@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import(
+from sqlalchemy import (
     Column,
     Integer,
     String,
@@ -14,15 +14,17 @@ from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    email = Column(String, unique=True,nullable=False,index=True)
-    hashed_password = Column(String,nullable=False)
+    email = Column(String, unique=True, nullable=False, index=True)
+    hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     letters = relationship("Letter", back_populates="user")
+
 
 class Letter(Base):
     __tablename__ = "letters"
@@ -33,9 +35,10 @@ class Letter(Base):
     image_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates= "letters")
-    extraction = relationship("Extraction", back_populates= "letter", uselist=False)
-    job = relationship("Job", back_populates= "letter", uselist=False)
+    user = relationship("User", back_populates="letters")
+    extraction = relationship("Extraction", back_populates="letter", uselist=False)
+    job = relationship("Job", back_populates="letter", uselist=False)
+
 
 class Extraction(Base):
     __tablename__ = "extractions"
@@ -53,19 +56,19 @@ class Extraction(Base):
     confidence_flags = Column(JSON, default=list)
     needs_human_review = Column(Boolean, default=False)
     approved = Column(Boolean, default=False)
+    draft_reply = Column(JSON, nullable=True)
 
     letter = relationship("Letter", back_populates="extraction")
+
 
 class Job(Base):
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True)
     letter_id = Column(Integer, ForeignKey("letters.id"), nullable=False)
-    status = Column(String, default="queued") # queued, processing, done, failed
+    status = Column(String, default="queued")  # queued, processing, done, failed
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    letter = relationship("Letter", back_populates = "job")
-
-    
+    letter = relationship("Letter", back_populates="job")
