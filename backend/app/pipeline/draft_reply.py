@@ -78,7 +78,7 @@ def generate_draft_reply(extraction: Extraction) -> DraftReply:
 
     response = client.models.generate_content(
         model=MODEL_NAME,
-        content=[prompt],
+        contents=[prompt],
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=DraftReply,
@@ -104,4 +104,3 @@ def generate_draft_reply(extraction: Extraction) -> DraftReply:
             ),
         )
         return DraftReply.model_validate_json(retry_response.text)
-    

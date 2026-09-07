@@ -2,7 +2,6 @@
 import uuid
 import os
 import tempfile
-from ics import Calendar, Event
 from datetime import date
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -24,8 +23,10 @@ from app.auth import (
 )
 from app.pipeline.classify_extract import classify_and_extract
 from app.queue import letter_queue
-from app.schemas import JobOut, UploadResponse, ApproveResponse
+from app.schemas import JobOut, UploadResponse, ApproveResponse, DraftReplyOut
 from app.worker import process_letter_job
+from app.pipeline.draft_reply import generate_draft_reply
+from app.ics_builder import build_ics
 
 from app.priority import build_letter_priority, detect_conflicts
 from app.schemas import PrioritiesResponse, LetterPriorityOut, ConflictOut
@@ -178,7 +179,7 @@ def approve_letter(
     return ApproveResponse(letter_id=letter.id, approved=True)
 
 
-@app.get("letters/{letter_id}/ics")
+@app.get("/letters/{letter_id}/ics")
 def get_letter_ics(
     letter_id: int,
     current_user: User = Depends(get_current_user),
@@ -200,21 +201,42 @@ def get_letter_ics(
             status_code=404, detail="this letter has no deadlines to export"
         )
 
-    calendar = Calendar()
-    for i, entry in enumerate(extraction.deadlines):
-        event = Event(
-            name=f"{extraction.authority}: {entry['description']}",
-            begin=entry["date"],
-            uid=f"letter-{letter_id}-deadline-{i}@bureaucracy-navigator",
-            description=extraction.consequences,
-        )
-        event.make_all_day()
-        calendar.events.add(event)
+    ics_content = build_ics(
+        letter_id=letter_id,
+        authority=extraction.authority,
+        consequences=extraction.consequences,
+        deadlines=extraction.deadlines,
+    )
 
     return Response(
-        content=calendar.serialize(),
+        content=ics_content,
         media_type="text/calendar",
         headers={
             "Content-Disposition": f'attachment; filename="letter_{letter_id}.ics"'
         },
     )
+
+
+@app.post("/letters/{letter_id}/draft", response_model=DraftReplyOut)
+def create_letter_draft(
+    letter_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    letter = db.get(Letter, letter_id)
+    if letter is None or letter.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="letter not found")
+
+    extraction = letter.extraction
+    if extraction is None:
+        raise HTTPException(status_code=409, detail="letter has not been extracted yet")
+
+    if not extraction.approved:
+        raise HTTPException(status_code=409, detail="letter has not been approved yet")
+
+    if extraction.draft_reply is None:
+        draft = generate_draft_reply(extraction)
+        extraction.draft_reply = draft.model_dump(mode="json")
+        db.commit()
+
+    return DraftReplyOut(letter_id=letter_id, **extraction.draft_reply)
