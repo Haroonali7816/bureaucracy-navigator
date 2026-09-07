@@ -26,9 +26,21 @@ def process_letter_job(letter_id: int) -> None:
             return
         needs_human_review = False
         self_check_note = None
+        field_confidence = None
+        review_reasoning = []
         try:
             check = self_check(letter.image_path, extraction)
             needs_human_review = check.needs_human_review
+            field_confidence = {
+                "authority": check.authority_confidence.value,
+                "letter_type": check.letter_type_confidence.value,
+                "deadlines": check.deadline_confidence.value,
+                "required_actions": check.required_actions_confidence.value,
+                "required_documents": check.required_documents_confidence.value,
+                "consequences": check.consequences_confidence.value,
+                "contact_info": check.contact_info_confidence.value,
+            }
+            review_reasoning = check.reasoning
         except Exception as exc:
             needs_human_review = True
             self_check_note = f"self_check failed, unverified:  {exc!r}"
@@ -45,6 +57,8 @@ def process_letter_job(letter_id: int) -> None:
                 contact_info=extraction.contact_info,
                 needs_human_review=needs_human_review,
                 confidence_flags=extraction.confidence_flags,
+                field_confidence=field_confidence,
+                review_reasoning=review_reasoning,
             )
         )
         job.status = "done"

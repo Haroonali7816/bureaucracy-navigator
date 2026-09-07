@@ -24,6 +24,7 @@ from app.auth import (
 from app.pipeline.classify_extract import classify_and_extract
 from app.queue import letter_queue
 from app.schemas import JobOut, UploadResponse, ApproveResponse, DraftReplyOut
+from app.schemas import LetterListItemOut, LetterDetailOut, ExtractionEditRequest
 from app.worker import process_letter_job
 from app.pipeline.draft_reply import generate_draft_reply
 from app.ics_builder import build_ics
@@ -101,6 +102,93 @@ def get_job(
     if job is None or job.letter.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="job not found")
     return JobOut.model_validate(job)
+
+
+def _letter_detail(letter: Letter) -> LetterDetailOut:
+    job = letter.job
+    extraction = letter.extraction
+    return LetterDetailOut(
+        letter_id=letter.id,
+        created_at=letter.created_at,
+        job_status=job.status if job else "unknown",
+        job_error_message=job.error_message if job else None,
+        authority=extraction.authority if extraction else None,
+        letter_type=extraction.letter_type if extraction else None,
+        deadlines=extraction.deadlines if extraction else [],
+        required_actions=extraction.required_actions if extraction else [],
+        required_documents=extraction.required_documents if extraction else [],
+        consequences=extraction.consequences if extraction else None,
+        contact_info=extraction.contact_info if extraction else None,
+        confidence_flags=extraction.confidence_flags if extraction else [],
+        field_confidence=extraction.field_confidence if extraction else None,
+        review_reasoning=extraction.review_reasoning if extraction else [],
+        needs_human_review=extraction.needs_human_review if extraction else None,
+        approved=extraction.approved if extraction else None,
+        draft_reply=extraction.draft_reply if extraction else None,
+    )
+
+
+@app.get("/letters", response_model=list[LetterListItemOut])
+def list_letters(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    letters = (
+        db.query(Letter)
+        .filter(Letter.user_id == current_user.id)
+        .order_by(Letter.created_at.desc())
+        .all()
+    )
+    return [
+        LetterListItemOut(
+            letter_id=letter.id,
+            created_at=letter.created_at,
+            job_status=letter.job.status if letter.job else "unknown",
+            authority=letter.extraction.authority if letter.extraction else None,
+            letter_type=letter.extraction.letter_type if letter.extraction else None,
+            needs_human_review=letter.extraction.needs_human_review if letter.extraction else None,
+            approved=letter.extraction.approved if letter.extraction else None,
+        )
+        for letter in letters
+    ]
+
+
+@app.get("/letters/{letter_id}", response_model=LetterDetailOut)
+def get_letter_detail(
+    letter_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    letter = db.get(Letter, letter_id)
+    if letter is None or letter.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="letter not found")
+    return _letter_detail(letter)
+
+
+@app.patch("/letters/{letter_id}", response_model=LetterDetailOut)
+def edit_letter_extraction(
+    letter_id: int,
+    payload: ExtractionEditRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    letter = db.get(Letter, letter_id)
+    if letter is None or letter.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="letter not found")
+
+    extraction = letter.extraction
+    if extraction is None:
+        raise HTTPException(status_code=409, detail="letter has not been extracted yet")
+    if extraction.approved:
+        raise HTTPException(status_code=409, detail="letter already approved, cannot edit")
+
+    updates = payload.model_dump(exclude_unset=True, mode="json")
+    for field, value in updates.items():
+        setattr(extraction, field, value)
+
+    db.commit()
+    db.refresh(letter)
+    return _letter_detail(letter)
 
 
 @app.post("/auth/signup", response_model=Token)

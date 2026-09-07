@@ -54,6 +54,8 @@ class Extraction(Base):
     consequences = Column(Text, nullable=True)
     contact_info = Column(Text, nullable=True)
     confidence_flags = Column(JSON, default=list)
+    field_confidence = Column(JSON, nullable=True)
+    review_reasoning = Column(JSON, default=list)
     needs_human_review = Column(Boolean, default=False)
     approved = Column(Boolean, default=False)
     draft_reply = Column(JSON, nullable=True)

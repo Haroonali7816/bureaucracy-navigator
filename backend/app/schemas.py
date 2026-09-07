@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
@@ -111,3 +111,45 @@ class DraftReplyOut(BaseModel):
     subject: str
     body_de: str
     summary_en: str
+class LetterListItemOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    letter_id: int
+    created_at: datetime
+    job_status: str
+    authority: Optional[str] = None
+    letter_type: Optional[str] = None
+    needs_human_review: Optional[bool] = None
+    approved: Optional[bool] = None
+
+
+class LetterDetailOut(BaseModel):
+    model_config = {"from_attributes": True}
+
+    letter_id: int
+    created_at: datetime
+    job_status: str
+    job_error_message: Optional[str] = None
+    authority: Optional[str] = None
+    letter_type: Optional[str] = None
+    deadlines: list[Deadline] = Field(default_factory=list)
+    required_actions: list[str] = Field(default_factory=list)
+    required_documents: list[str] = Field(default_factory=list)
+    consequences: Optional[str] = None
+    contact_info: Optional[str] = None
+    confidence_flags: list[str] = Field(default_factory=list)
+    field_confidence: Optional[dict] = None
+    review_reasoning: list[str] = Field(default_factory=list)
+    needs_human_review: Optional[bool] = None
+    approved: Optional[bool] = None
+    draft_reply: Optional[dict] = None
+
+
+class ExtractionEditRequest(BaseModel):
+    authority: Optional[Authority] = None
+    letter_type: Optional[LetterType] = None
+    deadlines: Optional[list[Deadline]] = None
+    required_actions: Optional[list[str]] = None
+    required_documents: Optional[list[str]] = None
+    consequences: Optional[str] = None
+    contact_info: Optional[str] = None
