@@ -46,6 +46,11 @@ none.
 - confidence_flags: short notes about anything in the letter you found ambiguous, hard to \
 read, or aren't fully sure about. Empty list if nothing was ambiguous.
 
+Write every field in English, regardless of what language the letter itself is written in \
+(most of these letters are in German). Translate rather than copy the original wording -- \
+e.g. required_actions and consequences must be English sentences describing what the letter \
+says, not the German text itself.
+
 Only report what the letter actually states. Do not guess a deadline that isn't written down."""
 
 def classify_and_extract(image_path: str) -> ExtractionResult:
