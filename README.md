@@ -45,7 +45,7 @@ every downstream endpoint checks it and refuses to run without it.
 | Calendar      | Hand-written RFC 5545 builder        | see `backend/app/ics_builder.py` — the `ics` PyPI package was dropped after a dependency dead-end (see build log) |
 | Frontend      | React + Vite                         | auth, upload, dashboard, letter detail, priority queue |
 | Container     | Docker + docker-compose              | postgres, redis, api, worker, frontend             |
-| Tests         | pytest                               | schema validation, conflict engine (24 tests)      |
+| Tests         | pytest                               | schema validation, conflict engine, 1 API integration test (36 tests) |
 
 ## API endpoints
 
@@ -93,6 +93,9 @@ bureaucracy-navigator/
         draft_reply.py          # Gemini call #3: draft reply generation
     unit tests/
       test_priority.py          # 24 tests, conflict/priority engine
+      test_schemas.py           # 11 tests, Pydantic extraction/self-check schema validation
+      test_api.py               # 1 real end-to-end test: signup -> login -> auth-scoped access
+    conftest.py                  # throwaway SQLite test DB + FastAPI TestClient fixture
     Dockerfile
     requirements.txt
   frontend/
@@ -118,9 +121,31 @@ bureaucracy-navigator/
     run_eval.py
     results_day2.json           # baseline — kept as-is, not cleaned up
     results_day3.json
+    results_final.json          # final scored run — see Evaluation section below
+    error_analysis.md           # honest write-up: what works, what doesn't, and why
   docker-compose.yml
   README.md
 ```
+
+## Evaluation
+
+Scored against 16 hand-labeled practice letters spanning 5 document types. Full methodology,
+every fix made, and what's honestly still broken: [`eval/error_analysis.md`](eval/error_analysis.md).
+
+| Metric | Score |
+|---|---|
+| Letter type accuracy | 75% |
+| Deadline date accuracy | 87.5% |
+| Action classification accuracy | 62.5% |
+| False confidence rate | 10.5% (2 of 19 high-confidence calls were wrong) |
+
+Two real bugs were found and fixed while building this eval, not just reported after the fact:
+the extraction prompt never pinned an output language, so roughly half of the `required_actions`
+came back in German instead of English until fixed; and the self-check pass rated a wrong
+letter-type classification "high confidence" twice (both times a letter mentioning a payment got
+mislabeled as a tax/fee notice) — the concrete failure case the false-confidence metric exists to
+catch. Both are written up with the actual letters and numbers in `error_analysis.md`, including
+what was deliberately left unfixed and why.
 
 ## Running it locally
 
