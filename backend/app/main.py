@@ -38,15 +38,38 @@ from app.schemas import PrioritiesResponse, LetterPriorityOut, ConflictOut
 UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
 
+class ThreadWorker(Worker):
+    """RQ Worker that skips signal-handler installation.
+
+    Signal handlers (SIGINT/SIGTERM) can only be registered from the main thread
+    of the main interpreter -- a CPython/OS-level restriction, not an RQ choice.
+    RQ's normal work() call installs them because it assumes it's running as its
+    own standalone process. Here, the worker deliberately runs inside a background
+    thread of this same FastAPI process (see RUN_WORKER_IN_PROCESS below), so that
+    call would raise ValueError and kill the thread immediately. We don't need
+    signal-based graceful shutdown here: the thread is daemon=True, so it's simply
+    killed when the process exits, and RQ automatically requeues whatever job was
+    in progress -- so skipping this is safe, not just a workaround.
+    """
+
+    def _install_signal_handlers(self):
+        pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
-   
+    # Free-tier deployment accommodation (see docs/deployment notes): Render's free tier has
+    # no separate slot for a background worker process, unlike docker-compose's dedicated
+    # `worker` service. When RUN_WORKER_IN_PROCESS=true is set (Render only -- never set
+    # locally), start the same RQ worker loop as a background thread instead, so one free web
+    # service does both jobs. `daemon=True` means this thread never blocks the process from
+    # exiting; it's fine for it to just vanish on shutdown, since RQ requeues an interrupted job.
     if os.environ.get("RUN_WORKER_IN_PROCESS") == "true":
         def _run_worker_loop():
-            Worker([letter_queue], connection=redis_conn).work()
+            ThreadWorker([letter_queue], connection=redis_conn).work()
 
         threading.Thread(target=_run_worker_loop, daemon=True, name="rq-worker").start()
 
