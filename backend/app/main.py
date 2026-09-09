@@ -2,6 +2,7 @@
 import uuid
 import os
 import tempfile
+import threading
 from datetime import date
 from pathlib import Path
 from contextlib import asynccontextmanager
@@ -23,7 +24,8 @@ from app.auth import (
     get_current_user,
 )
 from app.pipeline.classify_extract import classify_and_extract
-from app.queue import letter_queue
+from rq import Worker
+from app.queue import letter_queue, redis_conn
 from app.schemas import JobOut, UploadResponse, ApproveResponse, DraftReplyOut
 from app.schemas import LetterListItemOut, LetterDetailOut, ExtractionEditRequest
 from app.worker import process_letter_job
@@ -40,6 +42,14 @@ UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 async def lifespan(app: FastAPI):
     init_db()
     UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+   
+    if os.environ.get("RUN_WORKER_IN_PROCESS") == "true":
+        def _run_worker_loop():
+            Worker([letter_queue], connection=redis_conn).work()
+
+        threading.Thread(target=_run_worker_loop, daemon=True, name="rq-worker").start()
+
     yield
 
 
