@@ -5,6 +5,11 @@ confidence scoring, an async FastAPI/Redis/Postgres pipeline, a zero-LLM conflic
 engine, and human-approved `.ics` calendar + draft-reply generation, surfaced through a React
 dashboard.
 
+**Live:** [bureaucracy-navigator-gamma.vercel.app](https://bureaucracy-navigator-gamma.vercel.app)
+— backend at [bureaucracy-navigator.onrender.com](https://bureaucracy-navigator.onrender.com)
+([`/health`](https://bureaucracy-navigator.onrender.com/health)) — sign up with any email and
+upload one of the sample letters in `data/sample_letters_images/` to try it.
+
 ![Dashboard screenshot](docs/dashboard-screenshot.png)
 
 ## What this is
@@ -165,3 +170,15 @@ Requirements: Docker, Docker Compose, Node.js.
    npm run dev
    ```
 4. Open `http://localhost:5173`, sign up, and upload a letter (PNG only).
+
+## Deployment
+
+| Layer         | Host                                                                            | Notes |
+|---------------|----------------------------------------------------------------------------------|-------|
+| Frontend      | [Vercel](https://bureaucracy-navigator-gamma.vercel.app)                        | root dir `frontend`, Vite auto-detected, deploys on push to `main` |
+| Backend       | [Render](https://bureaucracy-navigator.onrender.com)                            | Docker runtime, root dir `backend`, free tier |
+| Database      | Neon (Postgres)                                                                  | connection string as Render env var `DATABASE_URL` |
+| Queue / cache | Upstash (Redis, TLS)                                                             | connection string as Render env var `REDIS_URL` (`rediss://`) |
+| Worker        | in-process on Render (`RUN_WORKER_IN_PROCESS=true`)                             | see below — free tier has no separate worker dyno, so the RQ worker runs as a background thread inside the same container as the API |
+| Keep-alive    | [`.github/workflows/keep-backend-alive.yml`](.github/workflows/keep-backend-alive.yml) | GitHub Actions cron, pings `/health` every 10 min so Render's free tier doesn't spin the container down |
+
