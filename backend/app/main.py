@@ -24,7 +24,8 @@ from app.auth import (
     get_current_user,
 )
 from app.pipeline.classify_extract import classify_and_extract
-from rq import Worker
+from rq import SimpleWorker
+from rq.worker import Worker
 from app.queue import letter_queue, redis_conn
 from app.schemas import JobOut, UploadResponse, ApproveResponse, DraftReplyOut
 from app.schemas import LetterListItemOut, LetterDetailOut, ExtractionEditRequest
@@ -38,18 +39,24 @@ from app.schemas import PrioritiesResponse, LetterPriorityOut, ConflictOut
 UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
 
-class ThreadWorker(Worker):
-    """RQ Worker that skips signal-handler installation.
+class ThreadWorker(SimpleWorker):
+    """RQ worker that runs jobs in-process, with no signal handling at all.
 
-    Signal handlers (SIGINT/SIGTERM) can only be registered from the main thread
-    of the main interpreter -- a CPython/OS-level restriction, not an RQ choice.
-    RQ's normal work() call installs them because it assumes it's running as its
-    own standalone process. Here, the worker deliberately runs inside a background
-    thread of this same FastAPI process (see RUN_WORKER_IN_PROCESS below), so that
-    call would raise ValueError and kill the thread immediately. We don't need
-    signal-based graceful shutdown here: the thread is daemon=True, so it's simply
-    killed when the process exits, and RQ automatically requeues whatever job was
-    in progress -- so skipping this is safe, not just a workaround.
+    Signal handlers (SIGINT/SIGTERM, and RQ's own SIGALRM-based per-job "death
+    penalty" watchdog) can only be installed from the main thread of the main
+    interpreter -- a CPython/OS-level restriction, not an RQ choice. RQ's default
+    Worker needs signals for two separate things: (1) graceful shutdown on
+    SIGINT/SIGTERM at startup, and (2) monitoring the forked child process ("work
+    horse") that actually runs each job, via a SIGALRM-based timer in
+    monitor_work_horse(). Overriding _install_signal_handlers() alone (as this
+    class used to) only fixes (1) -- (2) still crashes on the very first job,
+    because it fires from inside execute_job() every time, not just at startup.
+    Basing this on SimpleWorker instead of Worker fixes (2) at the root: SimpleWorker
+    runs each job in the SAME process (no fork), so there's no child process to
+    monitor and monitor_work_horse()/SIGALRM is never invoked at all. We still
+    don't need signal-based graceful shutdown: the thread is daemon=True, so it's
+    simply killed when the process exits, and RQ automatically requeues whatever
+    job was in progress -- so skipping (1) is safe, not just a workaround.
     """
 
     def _install_signal_handlers(self):
