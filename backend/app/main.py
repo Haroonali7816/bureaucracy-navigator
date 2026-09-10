@@ -26,6 +26,7 @@ from app.auth import (
 from app.pipeline.classify_extract import classify_and_extract
 from rq import SimpleWorker
 from rq.worker import Worker
+from rq.timeouts import TimerDeathPenalty
 from app.queue import letter_queue, redis_conn
 from app.schemas import JobOut, UploadResponse, ApproveResponse, DraftReplyOut
 from app.schemas import LetterListItemOut, LetterDetailOut, ExtractionEditRequest
@@ -40,24 +41,8 @@ UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
 
 class ThreadWorker(SimpleWorker):
-    """RQ worker that runs jobs in-process, with no signal handling at all.
 
-    Signal handlers (SIGINT/SIGTERM, and RQ's own SIGALRM-based per-job "death
-    penalty" watchdog) can only be installed from the main thread of the main
-    interpreter -- a CPython/OS-level restriction, not an RQ choice. RQ's default
-    Worker needs signals for two separate things: (1) graceful shutdown on
-    SIGINT/SIGTERM at startup, and (2) monitoring the forked child process ("work
-    horse") that actually runs each job, via a SIGALRM-based timer in
-    monitor_work_horse(). Overriding _install_signal_handlers() alone (as this
-    class used to) only fixes (1) -- (2) still crashes on the very first job,
-    because it fires from inside execute_job() every time, not just at startup.
-    Basing this on SimpleWorker instead of Worker fixes (2) at the root: SimpleWorker
-    runs each job in the SAME process (no fork), so there's no child process to
-    monitor and monitor_work_horse()/SIGALRM is never invoked at all. We still
-    don't need signal-based graceful shutdown: the thread is daemon=True, so it's
-    simply killed when the process exits, and RQ automatically requeues whatever
-    job was in progress -- so skipping (1) is safe, not just a workaround.
-    """
+    death_penalty_class = TimerDeathPenalty
 
     def _install_signal_handlers(self):
         pass
