@@ -1,0 +1,24 @@
+name: Keep Render backend alive
+
+# Render's free tier spins the backend down after ~15 minutes of no traffic; the next
+# request then eats a 30-50s cold start (and, worse, the very first request in that
+# window can come back with no CORS headers at all, since Render's own gateway answers
+# it before our FastAPI app ever runs -- see the CORS/"Network Error" bug this fixed).
+# Pinging /health well inside that 15-minute window keeps the container warm.
+on:
+  schedule:
+    - cron: "*/10 * * * *" # every 10 minutes, UTC
+  workflow_dispatch: {} # lets us trigger a manual run from the Actions tab to test it
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /health
+        run: |
+          status=$(curl -s -o /tmp/health_body.txt -w "%{http_code}" https://bureaucracy-navigator.onrender.com/health)
+          echo "status: $status"
+          cat /tmp/health_body.txt
+          if [ "$status" -ne 200 ]; then
+            echo "::warning::Health check returned $status instead of 200 -- backend may be cold-starting or down."
+          fi

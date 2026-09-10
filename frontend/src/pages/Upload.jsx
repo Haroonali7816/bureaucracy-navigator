@@ -31,7 +31,10 @@ export default function UploadPage() {
       await pollJob(job_id)
       navigate(`/letters/${letter_id}`)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Upload failed')
+      // err.message is set to a friendly cold-start explanation by the response
+      // interceptor in api/client.js when this was a network error, so prefer it
+      // over the generic fallback whenever the server didn't send back a real response.
+      setError(err.response?.data?.detail || err.message || 'Upload failed')
       setStatus('error')
     }
   }
