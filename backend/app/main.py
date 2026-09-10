@@ -25,7 +25,6 @@ from app.auth import (
 )
 from app.pipeline.classify_extract import classify_and_extract
 from rq import SimpleWorker
-from rq.worker import Worker
 from rq.timeouts import TimerDeathPenalty
 from app.queue import letter_queue, redis_conn
 from app.schemas import JobOut, UploadResponse, ApproveResponse, DraftReplyOut
@@ -93,23 +92,6 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
-
-
-@app.get("/debug/worker-status")
-def debug_worker_status():
-    """TEMP DEBUG (remove once the worker issue is confirmed/fixed): jobs were stuck at
-    'queued' forever with nothing in the logs. This reports, straight from the running
-    process, whether the RQ worker thread actually exists and whether Redis has ever
-    seen it register -- instead of guessing from log output alone."""
-    thread_names = [t.name for t in threading.enumerate()]
-    registered_workers = Worker.all(connection=redis_conn)
-    return {
-        "run_worker_in_process_env": os.environ.get("RUN_WORKER_IN_PROCESS"),
-        "thread_names": thread_names,
-        "rq_worker_thread_alive": "rq-worker" in thread_names,
-        "registered_rq_workers": [w.name for w in registered_workers],
-        "queue_length": letter_queue.count,
-    }
 
 
 @app.post("/letters", response_model=UploadResponse)
