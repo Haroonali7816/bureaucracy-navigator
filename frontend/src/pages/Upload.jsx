@@ -21,9 +21,11 @@ export default function UploadPage() {
     formData.append('file', file)
 
     try {
-      const response = await client.post('/letters', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      // Deliberately NOT setting Content-Type here: FormData needs a browser-generated
+      // multipart boundary (e.g. "boundary=----WebKitFormBoundary...") to mark where the
+      // file field starts/ends in the request body. Hardcoding 'multipart/form-data'
+      // without one leaves the server unable to parse the body at all.
+      const response = await client.post('/letters', formData)
       const { letter_id, job_id } = response.data
       setStatus('processing')
       await pollJob(job_id)
